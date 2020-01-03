@@ -1,0 +1,2 @@
+#bin/sh
+find . -not -name '*.hs' -not -name '*.md' -not -name LICENSE -type f -not -path './.git*' -not -path './bin/*'
