@@ -14,7 +14,9 @@ atomStart = "\"tfn0123456789-[{"
 
 parseJSON :: String -> JValue
 parseJSON [] = error "Cannot parse an empty string"
-parseJSON js = fst $ parseNext js "[{"
+parseJSON js = if null $ snd rs then fst rs
+               else error $ "Encountered garbage after JSON object: " ++ (snd rs)
+  where rs = parseNext js "[{"
 
 parseNext :: String -> String -> (JValue, String)
 parseNext js allow
