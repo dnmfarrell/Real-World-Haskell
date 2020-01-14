@@ -1,5 +1,7 @@
 module ParseJSON (parseJSON) where
 
+atomStart = "\"tfn0123456789-[{"
+
 data JValue = JString String
             | JDouble Double
             | JInt Int
@@ -11,9 +13,10 @@ data JValue = JString String
 
 parseJSON :: String -> JValue
 parseJSON [] = error "Cannot parse an empty string"
-parseJSON js = if null $ snd rs then fst rs
+parseJSON js = if eof then fst rs
                else error $ "Encountered garbage after JSON object: " ++ (snd rs)
-  where rs = parseNext js "[{"
+  where rs  = parseNext js atomStart
+        eof = null $ skipWhitespace (snd rs)
 
 parseNext :: String -> String -> (JValue, String)
 parseNext js allow
@@ -89,7 +92,7 @@ newJArray (xs, ',':js)
   where ns = skipWhitespace js
         n  = head ns
 newJArray (xs, js) = newJArray (xs ++ [fst nv], skipWhitespace $ snd nv)
-  where nv = parseNext js "\"tfn0123456789-[{"
+  where nv = parseNext js atomStart
 
 newJObject :: ([(String, JValue)], String) -> ([(String, JValue)], String)
 newJObject (xs, '}':js) = (xs, js)
@@ -111,7 +114,7 @@ newJPair js = if head ss == ':' then ((k1, v1), v2)
   where k  = parseNext (skipWhitespace js) "\""
         k1 = case getString $ fst k of Just s -> s
         ss = skipWhitespace $ snd k
-        v  = parseNext (tail ss) "\"tfn0123456789-[{"
+        v  = parseNext (tail ss) atomStart
         v1 = fst v
         v2 = skipWhitespace $ snd v
         getString (JString s) = Just s
