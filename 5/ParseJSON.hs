@@ -1,4 +1,4 @@
-module ParseJSON where
+module ParseJSON (parseJSON) where
 
 data JValue = JString String
             | JDouble Double
