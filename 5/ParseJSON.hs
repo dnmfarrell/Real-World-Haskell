@@ -104,13 +104,19 @@ newJObject (xs, j:js)
   | j == ','  = if null xs then error "Expected a pair or } but found: ,"
                 else if any (n==) ",}" then error $ "Expected an element but found: " ++ [n]
                 else newJObject (xs, ns)
-  | otherwise = if any (t==) ",}" then newJObject (xs ++ [fst p], snd p)
+  | otherwise = if any (t==) ",}" then
+                  if checkKeyUnique (xs, fst p1) then newJObject (xs ++ [p1], snd p)
+                  else error $ "Found duplicate key: " ++ (fst p1)
                 else error $ "Expected on of: ,} but found: " ++ [t]
   where ns = skipWhitespace js
         n  = head ns
         p  = newJPair (j:js)
+        p1 = fst p
         ts = skipWhitespace $ snd p
         t  = head ts
+
+checkKeyUnique :: ([(String, JValue)], String) -> Bool
+checkKeyUnique (pairs, key) = not $ any (\pair -> key == (fst pair)) pairs
 
 newJPair :: String -> ((String, JValue), String)
 newJPair [] = error "Expected a key:pair but got an empty string"
