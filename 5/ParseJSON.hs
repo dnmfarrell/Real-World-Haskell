@@ -85,27 +85,32 @@ newJNumber js
         hasE    = any ('e'==) js || any ('E'==) js
 
 newJArray :: ([JValue], String) -> ([JValue], String)
-newJArray (xs, ']':js) = (xs, js)
-newJArray (xs, ',':js) 
-  | any (n==) ",]" = error $ "Expected an element but found: " ++ [n]
-  | otherwise      = newJArray (xs, ns)
+newJArray (xs, j:js)
+  | j == ']'  = (xs, js)
+  | j == ','  = if null xs then  error "Expected an element or ] but found: ,"
+                else if any (n==) ",]" then  error $ "Expected element but found: " ++ [n]
+                else newJArray (xs, ns)
+  | otherwise = if any (t==) ",]" then newJArray (xs ++ [fst v], ts)
+                else error $ "Expected one of: ,] but found: " ++ [t]
   where ns = skipWhitespace js
         n  = head ns
-newJArray (xs, js) = newJArray (xs ++ [fst nv], skipWhitespace $ snd nv)
-  where nv = parseNext js atomStart
+        v  = parseNext (j:js) atomStart
+        ts = skipWhitespace $ snd v
+        t  = head ts
 
 newJObject :: ([(String, JValue)], String) -> ([(String, JValue)], String)
-newJObject (xs, '}':js) = (xs, js)
-newJObject (xs, ',':js)
-  | any (n==) ",}" = error $ "Expected an element but found: " ++ [n]
-  | otherwise      = newJObject (xs, ns)
+newJObject (xs, j:js)
+  | j == '}'  = (xs, js)
+  | j == ','  = if null xs then error "Expected a pair or } but found: ,"
+                else if any (n==) ",}" then error $ "Expected an element but found: " ++ [n]
+                else newJObject (xs, ns)
+  | otherwise = if any (t==) ",}" then newJObject (xs ++ [fst p], snd p)
+                else error $ "Expected on of: ,} but found: " ++ [t]
   where ns = skipWhitespace js
         n  = head ns
-        kv = newJPair ns
-newJObject (xs, js) = newJObject (xs ++ [fst kv], snd kv)
-  where ns = skipWhitespace js
-        n  = head ns
-        kv = newJPair ns
+        p  = newJPair (j:js)
+        ts = skipWhitespace $ snd p
+        t  = head ts
 
 newJPair :: String -> ((String, JValue), String)
 newJPair [] = error "Expected a key:pair but got an empty string"
