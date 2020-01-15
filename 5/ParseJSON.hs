@@ -56,10 +56,10 @@ takeValue ('"':xs) = takeStrWhile xs
                           '"' -> x: (head xs :(takeStrWhile (tail xs)))
                           _   -> x: (takeStrWhile xs)
           | otherwise = x: (takeStrWhile xs)
-takeValue xs = takeWhile (\j -> not (any (j==) ("\n\t\f\r ,]}"))) xs
+takeValue xs = takeWhile (\j -> not (any (j==) ("\n\t\r ,]}"))) xs
 
 takeWhitespace :: String -> String
-takeWhitespace = takeWhile (\j -> any (j==) "\n\t\f\r ")
+takeWhitespace = takeWhile (\j -> any (j==) "\n\t\r ")
 
 skipWhitespace:: String -> String
 skipWhitespace = drop =<< length . takeWhitespace
